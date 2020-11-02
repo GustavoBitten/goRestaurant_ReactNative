@@ -129,14 +129,34 @@ const FoodDetails: React.FC = () => {
 
   const toggleFavorite = useCallback(() => {
     // Toggle if food is favorite or not
+    setIsFavorite(oldValue => !oldValue);
   }, [isFavorite, food]);
 
   const cartTotal = useMemo(() => {
     // Calculate cartTotal
+    const valueExtras = extras.reduce((accumulator, extra) => {
+      return accumulator + extra.value * extra.quantity;
+    }, 0);
+
+    const totalByFood = food.price + valueExtras;
+
+    const totalByOrder = totalByFood * foodQuantity;
+
+    return totalByOrder;
   }, [extras, food, foodQuantity]);
 
   async function handleFinishOrder(): Promise<void> {
     // Finish the order and save on the API
+    const { description, id, price, image_url, name } = food;
+    const dataToSend = {
+      product_id: id,
+      thumbnail_url: image_url,
+      name,
+      extras,
+      description,
+      price,
+    };
+    api.post('/orders', dataToSend);
   }
 
   // Calculate the correct icon name
@@ -211,7 +231,9 @@ const FoodDetails: React.FC = () => {
         <TotalContainer>
           <Title>Total do pedido</Title>
           <PriceButtonContainer>
-            <TotalPrice testID="cart-total">{cartTotal}</TotalPrice>
+            <TotalPrice testID="cart-total">
+              {formatValue(cartTotal)}
+            </TotalPrice>
             <QuantityContainer>
               <Icon
                 size={15}
